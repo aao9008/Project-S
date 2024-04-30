@@ -8,6 +8,7 @@ using MixedReality.Toolkit.Subsystems;
 using UnityEngine;
 using UnityEngine.Events;
 using MixedReality.Toolkit;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Demonstration script showing how to subscribe to and handle
@@ -48,10 +49,12 @@ public class Test : MonoBehaviour
     [SerializeField]
     private VoiceCommand voiceCommand;
 
+    [SerializeField]
+    private AutoScroll autoScroll;
+
     private string recognizedText = ""; // Variable to store recognized phrases
 
     private IDictationSubsystem dictationSubsystem = null;
-    private IKeywordRecognitionSubsystem keywordRecognitionSubsystem = null;
 
     /// <summary>
     /// Start dictation on a DictationSubsystem.
@@ -64,11 +67,7 @@ public class Test : MonoBehaviour
         dictationSubsystem = XRSubsystemHelpers.DictationSubsystem;
         if (dictationSubsystem != null)
         {
-            keywordRecognitionSubsystem = XRSubsystemHelpers.KeywordRecognitionSubsystem;
-            if (keywordRecognitionSubsystem != null)
-            {
-                keywordRecognitionSubsystem.Stop();
-            }
+            voiceCommand.StopCommandsSystem();
 
             dictationSubsystem.Recognizing += DictationSubsystem_Recognizing;
             dictationSubsystem.Recognized += DictationSubsystem_Recognized;
@@ -89,10 +88,17 @@ public class Test : MonoBehaviour
         HandleDictationShutdown();
     }
 
-    private void DictationSubsystem_RecognitionFinished(DictationSessionEventArgs obj)
+    private async void DictationSubsystem_RecognitionFinished(DictationSessionEventArgs obj)
     {
+        // Proceed with normal recognition finished handling
         OnRecognitionFinished.Invoke(recognizedText + "\n" + "Notes Finished");
         HandleDictationShutdown();
+
+        await Task.Delay(3000); // Waits for 3 seconds
+
+        voiceCommand.notesPanel.SetActive(false);
+        voiceCommand.notesForm.SetActive(true);
+       
     }
 
     private void DictationSubsystem_Recognized(DictationResultEventArgs obj)
@@ -100,11 +106,16 @@ public class Test : MonoBehaviour
         string recognizedPhrase = "Recognized: " + obj.Result;
         recognizedText += recognizedPhrase + "\n"; // Append recognized phrase
         OnSpeechRecognized.Invoke(recognizedText);
+        autoScroll.ScrollToBottom();
     }
 
     private void DictationSubsystem_Recognizing(DictationResultEventArgs obj)
     {
-        OnSpeechRecognizing.Invoke(recognizedText + "\n"+ obj.Result);
+       
+        // Continue with the original logic of the Recognizing event
+        OnSpeechRecognizing.Invoke(recognizedText + "\n" + obj.Result);
+        autoScroll.ScrollToBottom();
+        
     }
 
     /// <summary>
@@ -129,15 +140,11 @@ public class Test : MonoBehaviour
             dictationSubsystem.Recognized -= DictationSubsystem_Recognized;
             dictationSubsystem.RecognitionFinished -= DictationSubsystem_RecognitionFinished;
             dictationSubsystem.RecognitionFaulted -= DictationSubsystem_RecognitionFaulted;
+            dictationSubsystem.StopDictation();
             dictationSubsystem = null;
         }
 
-        if (keywordRecognitionSubsystem != null)
-        {
-            keywordRecognitionSubsystem.Start();
-            keywordRecognitionSubsystem = null;
-        }
-
+       
         // Restart the Phrase Recognition System
         voiceCommand.RestartCommandsSystem();
     }

@@ -12,11 +12,15 @@ public class VoiceCommand : MonoBehaviour
     public AudioSource processEndSound;
     public Test dictationManager;
     public GameObject aiModel;
+    public GameObject notesPanel;
+    public GameObject notesForm;
 
     void Start()
     {
         // Set the GameObject to be initially inactive
         aiModel.SetActive(false);
+        notesPanel.SetActive(false);
+        notesForm.SetActive(false);
 
         // Initialize KeywordRecognizer with the keyword "Socius"
         recognizer = new KeywordRecognizer(new string[] { "Socius", "Socius dismiss", "test", "take notes" });
@@ -64,6 +68,9 @@ public class VoiceCommand : MonoBehaviour
         // Check if the recognized phrase matches the keyword "Socius"
         else if (args.text == "take notes")
         {
+            // Dispaly notes panel
+            notesPanel.SetActive(true);
+
             // Stop the Phrase recognition system
             PhraseRecognitionSystem.Shutdown();
 
@@ -82,6 +89,34 @@ public class VoiceCommand : MonoBehaviour
         // Enable voice commands
         PhraseRecognitionSystem.Restart();
         processEndSound.Play();
+    }
+
+    // This funciton will be called when StartRecognition event fires
+    public void StopCommandsSystem()
+    {
+        // Disable voice commands
+        PhraseRecognitionSystem.Shutdown();
+    }
+
+    public GameObject loadingSpinner;
+
+    // This function simulates form transmission to EPIC
+    public void SubmitForm()
+    {
+        // Hide the form
+        notesForm.SetActive(false);
+
+        // Activate the loading spinner after a delay
+        StartCoroutine(ActivateLoadingSpinnerAfterDelay());
+    }
+
+    IEnumerator ActivateLoadingSpinnerAfterDelay()
+    {
+        // Wait for 1 second (adjust as needed)
+        yield return new WaitForSeconds(1f);
+
+        // Activate the loading spinner
+        loadingSpinner.SetActive(true);
     }
 }
 
