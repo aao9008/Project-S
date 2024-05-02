@@ -56,6 +56,8 @@ public class Test : MonoBehaviour
 
     private IDictationSubsystem dictationSubsystem = null;
 
+    public PositionSlateInMiddle positionSlateScript;
+
     /// <summary>
     /// Start dictation on a DictationSubsystem.
     /// </summary>
@@ -67,8 +69,6 @@ public class Test : MonoBehaviour
         dictationSubsystem = XRSubsystemHelpers.DictationSubsystem;
         if (dictationSubsystem != null)
         {
-            voiceCommand.StopCommandsSystem();
-
             dictationSubsystem.Recognizing += DictationSubsystem_Recognizing;
             dictationSubsystem.Recognized += DictationSubsystem_Recognized;
             dictationSubsystem.RecognitionFinished += DictationSubsystem_RecognitionFinished;
@@ -97,6 +97,9 @@ public class Test : MonoBehaviour
         await Task.Delay(3000); // Waits for 3 seconds
 
         voiceCommand.notesPanel.SetActive(false);
+
+        positionSlateScript.SetSlatePositionAndRotation();
+
         voiceCommand.notesForm.SetActive(true);
        
     }
